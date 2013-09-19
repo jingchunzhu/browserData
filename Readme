@@ -1,0 +1,8 @@
+browserData: assorted scripts for processing cancer browser data
+
+mafToSpareMatrices: contains scripts, etc for deriving matrix heatmaps from
+  MAF files.
+
+buildUcscGenesComboBed: contains scripts and data for building a special bed
+  file, and probe map, that contains all versions of all UCSC Genes 
+  transcripts.
