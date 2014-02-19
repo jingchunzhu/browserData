@@ -1,0 +1,10 @@
+##SnpEffVersion="3.4 (build 2013-11-23), by Pablo Cingolani"
+##SnpEffCmd="SnpEff  hg19 -sequenceOntolgy test.vcf "
+##INFO=<ID=EFF,Number=.,Type=String,Description="Predicted effects for this variant.Format: 'Effect ( Effect_Impact | Functional_Class | Codon_Change | Amino_Acid_Change| Amino_Acid_length | Gene_Name | Transcript_BioType | Gene_Coding | Transcript_ID | Exon_Rank  | Genotype_Number [ | ERRORS | WARNINGS ] )' ">
+13	25670500	.	G	T	.	.	EFF=missense(MODERATE|MISSENSE|gCg/gTg|A55V|631|PABPC3||CODING|NM_030979.2|1|1|WARNING_REF_DOES_NOT_MATCH_GENOME)
+11	65270000	.	T	A	.	.	EFF=non_coding_exon_variant(MODIFIER|||||MALAT1||NON_CODING|NR_002819.2|1|1)
+9	35685110	.	G	A	.	.	EFF=downstream_gene_variant(MODIFIER||3956||459|CA9||CODING|NM_001216.2||1),intron_variant(MODIFIER||||284|TPM2||CODING|NM_003289.3|5|1),synonymous_variant(LOW||cTt/cTt|L197|284|TPM2||CODING|NM_213674.1|6|1|WARNING_REF_DOES_NOT_MATCH_GENOME)
+7	140453137	.	T	G	.	.	EFF=missense(MODERATE|MISSENSE|Gtg/Ctg|V600L|766|BRAF||CODING|NM_004333.4|15|1|WARNING_REF_DOES_NOT_MATCH_GENOME)
+7	140453137	.	T	.	.	.	EFF=non_coding_exon_variant(MODIFIER||||766|BRAF||CODING|NM_004333.4|15|1)
+7	140453137	.	T	AGG	.	.	EFF=frameshift_variant(HIGH||-/CC|-599?|766|BRAF||CODING|NM_004333.4|15|1)
+1	1647813	.	T	A	.	.	EFF=missense(MODERATE|MISSENSE|Atg/Ttg|M109L|735|CDK11B||CODING|NM_033488.1|6|1),missense(MODERATE|MISSENSE|Atg/Ttg|M120L|746|CDK11B||CODING|NM_033489.1|6|1),missense(MODERATE|MISSENSE|Atg/Ttg|M143L|769|CDK11B||CODING|NM_033493.1|5|1),missense(MODERATE|MISSENSE|Atg/Ttg|M143L|778|CDK11B||CODING|NM_033492.1|5|1),missense(MODERATE|MISSENSE|Atg/Ttg|M144L|770|CDK11A||CODING|NM_033529.2|5|1),missense(MODERATE|MISSENSE|Atg/Ttg|M154L|780|CDK11A||CODING|NM_024011.2|5|1),missense(MODERATE|MISSENSE|Atg/Ttg|M154L|780|CDK11B||CODING|NM_033486.1|5|1),start_gained(LOW||||526|CDK11B||CODING|NM_033487.1|5|1)

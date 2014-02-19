@@ -1,0 +1,85 @@
+##fileformat=VCFv4.1
+##tcgaversion=1.0
+##fileDate=20130719
+##center=UCSC
+##source="RADIA pipeline v1.0"
+##reference=file:/inside/depot/fa/all_sequences.fasta
+##phasing=none
+##vcfGenerator=<addOrigin=<True>,algorithm=<RADIA>,batchSize=<10000000>,chromSizesFilename=</inside/home/aradenba/rnaEditing/data/hg19/hg19_chromSizes.tab>,dataSource=<cgHub>,dnaNormalFastaFilename=</inside/depot/fa/GRCh37-lite.fa>,dnaNormalFilename=</inside/depot4/users/aradenba/data/hg19/ucec/bams/exome/TCGA-A5-A0G3-10A-01W-A062-09.bam>,dnaNormalMaxErrPct=<0.01>,dnaNormalMaxTotalNumBases=<20000>,dnaNormalMinAltNumBases=<4>,dnaNormalMinAltPct=<0.1>,dnaNormalMinBaseQuality=<10>,dnaNormalMinMappingQuality=<10>,dnaNormalMinStrandBiasDepth=<3>,dnaNormalMinTotalNumBases=<10>,dnaNormalMitochon=<M>,dnaNormalStrandBias=<0.01>,dnaNormalUseChrPrefix=<False>,dnaTumorFastaFilename=</inside/depot/fa/GRCh37-lite.fa>,dnaTumorFilename=</inside/depot4/users/aradenba/data/hg19/ucec/bams/exome/TCGA-A5-A0G3-01A-11W-A062-09.bam>,dnaTumorMaxErrPct=<0.01>,dnaTumorMaxTotalNumBases=<20000>,dnaTumorMinAltNumBases=<4>,dnaTumorMinAltPct=<0.1>,dnaTumorMinBaseQuality=<10>,dnaTumorMinMappingQuality=<10>,dnaTumorMinStrandBiasDepth=<3>,dnaTumorMinTotalNumBases=<10>,dnaTumorMitochon=<M>,dnaTumorStrandBias=<0.01>,dnaTumorUseChrPrefix=<False>,fastaFilename=</inside/depot/fa/GRCh37-lite.fa>,filterUsingDNA=<False>,filterUsingRNA=<False>,genotypeMinDepth=<2>,genotypeMinPct=<0.1>,logLevel=<WARNING>,lohMaxDepth=<2>,lohMaxPct=<0.02>,maxAltDepth=<2>,maxAltPct=<0.01>,minAltAvgBaseQual=<20.0>,modMinDepth=<4>,modMinPct=<0.1>,outputFilename=</inside/depot4/users/aradenba/data/hg19/ucec_triplets_mapsplice/radia/filtersSomOnly/dnaCalls/TCGA-A5-A0G3-10A-01W-A062-09_TCGA-A5-A0G3-01A-11W-A062-09_chr1.vcf>,refFilename=</inside/depot/fa/all_sequences.fasta>,refId=<hg19>,refUrl=</inside/depot/fa/GRCh37-lite.fa>,rnaTumorFastaFilename=</inside/depot/fa/GRCh37-lite_w_chr_prefix.fa>,rnaTumorFilename=</inside/depot4/users/aradenba/data/hg19/ucec/bams/rna/mapsplice2/TCGA-A5-A0G3-01A-11R-A040-07.bam>,rnaTumorMaxErrPct=<0.01>,rnaTumorMaxTotalNumBases=<20000>,rnaTumorMinAltNumBases=<4>,rnaTumorMinAltPct=<0.1>,rnaTumorMinBaseQuality=<10>,rnaTumorMinMappingQuality=<10>,rnaTumorMinStrandBiasDepth=<6.0>,rnaTumorMinTotalNumBases=<10>,rnaTumorMitochon=<M>,rnaTumorStrandBias=<0.01>,rnaTumorUseChrPrefix=<True>,sequencingPlatform=<Illumina>,startCoordinate=<1>,stopCoordinate=<249250621>,useChrPrefix=<False>,vcfFileFormat=<VCFv4.1>,version=<1.0>>
+##INDIVIDUAL=TCGA-A5-A0G3
+##SAMPLE=<ID=DNA_NORMAL,SampleName=TCGA-A5-A0G3-10A-01W,Individual=TCGA-A5-A0G3,Description="Normal DNA Sample",File="/inside/depot4/users/aradenba/data/hg19/ucec/bams/exome/TCGA-A5-A0G3-10A-01W-A062-09.bam",Platform="Illumina",Source="cgHub">
+##SAMPLE=<ID=DNA_TUMOR,SampleName=TCGA-A5-A0G3-01A-11W,Individual=TCGA-A5-A0G3,Description="Tumor DNA Sample",File="/inside/depot4/users/aradenba/data/hg19/ucec/bams/exome/TCGA-A5-A0G3-01A-11W-A062-09.bam",Platform="Illumina",Source="cgHub">
+##SAMPLE=<ID=RNA_TUMOR,SampleName=TCGA-A5-A0G3-01A-11R,Individual=TCGA-A5-A0G3,Description="Tumor RNA Sample",File="/inside/depot4/users/aradenba/data/hg19/ucec/bams/rna/mapsplice2/TCGA-A5-A0G3-01A-11R-A040-07.bam",Platform="Illumina",Source="cgHub">
+##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 135">
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Number of unique alleles across all samples">
+##INFO=<ID=AC,Number=.,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=.,Type=Float,Description="Allele frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total read depth for all samples">
+##INFO=<ID=INDEL,Number=1,Type=Integer,Description="Number of indels for all samples">
+##INFO=<ID=START,Number=1,Type=Integer,Description="Number of reads starting at this position across all samples">
+##INFO=<ID=STOP,Number=1,Type=Integer,Description="Number of reads stopping at this position across all samples">
+##INFO=<ID=BQ,Number=1,Type=Float,Description="Overall average base quality">
+##INFO=<ID=SB,Number=1,Type=Float,Description="Overall strand bias">
+##INFO=<ID=FA,Number=1,Type=Float,Description="Overall fraction of reads supporting ALT">
+##INFO=<ID=MT,Number=.,Type=String,Description="Modification types at this position">
+##INFO=<ID=MC,Number=.,Type=String,Description="Modification base changes at this position">
+##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description="Indicates if record is a somatic mutation">
+##INFO=<ID=VT,Number=1,Type=String,Description="Variant type, can be SNP, INS or DEL">
+##FILTER=<ID=blat,Description="The call did not pass the BLAT filter">
+##FILTER=<ID=multi,Description="There are multiple ALT alleles across all samples at this position">
+##FILTER=<ID=dnmntb,Description="DNA Normal minimum total bases is less than user-specified cut-off">
+##FILTER=<ID=dtmntb,Description="DNA Tumor minimum total bases is less than user-specified cut-off">
+##FILTER=<ID=rnmntb,Description="RNA Normal minimum total bases is less than user-specified cut-off">
+##FILTER=<ID=rtmntb,Description="RNA Tumor minimum total bases is less than user-specified cut-off">
+##FILTER=<ID=dnmxtb,Description="DNA Normal maximum total bases is greater than user-specified cut-off">
+##FILTER=<ID=dtmxtb,Description="DNA Tumor maximum total bases is greater than user-specified cut-off">
+##FILTER=<ID=rnmxtb,Description="RNA Normal maximum total bases is greater than user-specified cut-off">
+##FILTER=<ID=rtmxtb,Description="RNA Tumor maximum total bases is greater than user-specified cut-off">
+##FILTER=<ID=dnmnab,Description="DNA Normal minimum ALT bases is less than user-specified cut-off">
+##FILTER=<ID=dtmnab,Description="DNA Tumor minimum ALT bases is less than user-specified cut-off">
+##FILTER=<ID=rnmnab,Description="RNA Normal minimum ALT bases is less than user-specified cut-off">
+##FILTER=<ID=rtmnab,Description="RNA Tumor minimum ALT bases is less than user-specified cut-off">
+##FILTER=<ID=dnmnap,Description="DNA Normal minimum ALT percentage is less than user-specified cut-off">
+##FILTER=<ID=dtmnap,Description="DNA Tumor minimum ALT percentage is less than user-specified cut-off">
+##FILTER=<ID=rnmnap,Description="RNA Normal minimum ALT percentage is less than user-specified cut-off">
+##FILTER=<ID=rtmnap,Description="RNA Tumor minimum ALT percentage is less than user-specified cut-off">
+##FILTER=<ID=dnmnbq,Description="DNA Normal minimum average ALT base quality is less than user-specified cut-off">
+##FILTER=<ID=dtmnbq,Description="DNA Tumor minimum average ALT base quality is less than user-specified cut-off">
+##FILTER=<ID=rnmnbq,Description="RNA Normal minimum average ALT base quality is less than user-specified cut-off">
+##FILTER=<ID=rtmnbq,Description="RNA Tumor minimum average ALT base quality is less than user-specified cut-off">
+##FILTER=<ID=dnmnrb,Description="DNA Normal minimum REF bases is less than user-specified cut-off">
+##FILTER=<ID=dnmnrp,Description="DNA Normal minimum REF percentage is less than user-specified cut-off">
+##FILTER=<ID=dtmnrb,Description="DNA Tumor minimum REF bases is less than user-specified cut-off">
+##FILTER=<ID=dtmnrp,Description="DNA Tumor minimum REF percentage is less than user-specified cut-off">
+##FILTER=<ID=dnmxerr,Description="DNA Normal maximum total ALT percentage attributed to error (sequencing, contamination, etc.) is greater than user-specified cut-off">
+##FILTER=<ID=dtmxerr,Description="DNA Tumor maximum total ALT percentage attributed to error (sequencing, contamination, etc.) is greater than user-specified cut-off">
+##FILTER=<ID=rnmxerr,Description="RNA Normal maximum total ALT percentage attributed to error (sequencing, contamination, etc.) is greater than user-specified cut-off">
+##FILTER=<ID=rtmxerr,Description="RNA Tumor maximum total ALT percentage attributed to error (sequencing, contamination, etc.) is greater than user-specified cut-off">
+##FILTER=<ID=dnsbias,Description="Strand bias, majority of reads supporting ALT are on forward OR reverse strand">
+##FILTER=<ID=dtsbias,Description="Strand bias, majority of reads supporting ALT are on forward OR reverse strand">
+##FILTER=<ID=rnsbias,Description="Strand bias, majority of reads supporting ALT are on forward OR reverse strand">
+##FILTER=<ID=rtsbias,Description="Strand bias, majority of reads supporting ALT are on forward OR reverse strand">
+##INFO=<ID=ORIGIN,Number=.,Type=String,Description="Where the call originated from, the tumor DNA, RNA, or both">
+##FILTER=<ID=ntr,Description="Position does not overlap with a TCGA target region">
+##FILTER=<ID=blq,Description="Position overlaps 1000 Genomes Project mapping qulaity blacklist">
+##FILTER=<ID=bldp,Description="Position overlaps 1000 Genomes Project depth blacklist">
+##FILTER=<ID=blck,Description="Position overlaps 1000 Genomes Project blacklist">
+##FILTER=<ID=noref,Description="Position skipped, reference=N">
+##FILTER=<ID=diffref,Description="Position skipped, different references in files">
+##FILTER=<ID=mbt,Description="Minimum total bases is less than user-specified cut-off">
+##FILTER=<ID=mba,Description="Minimum ALT bases is less than user-specified cut-off">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth at this position in the sample">
+##FORMAT=<ID=INDEL,Number=1,Type=Integer,Description="Number of indels">
+##FORMAT=<ID=START,Number=1,Type=Integer,Description="Number of reads starting at this position">
+##FORMAT=<ID=STOP,Number=1,Type=Integer,Description="Number of reads stopping at this position">
+##FORMAT=<ID=AD,Number=.,Type=Float,Description="Depth of reads supporting alleles">
+##FORMAT=<ID=AF,Number=.,Type=Float,Description="Fraction of reads supporting alleles">
+##FORMAT=<ID=BQ,Number=.,Type=Float,Description="Avg base quality for reads supporting alleles">
+##FORMAT=<ID=SB,Number=.,Type=Float,Description="Strand Bias for reads supporting alleles">
+##FORMAT=<ID=SS,Number=1,Type=Integer,Description="Variant status relative to non-adjacent Normal, 0=wildtype,1=germline,2=somatic,3=LOH,4=unknown,5=rnaEditing">
+##FORMAT=<ID=SSC,Number=1,Type=Integer,Description="Somatic score between 0 and 255">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	DNA_NORMAL	DNA_TUMOR	RNA_TUMOR
+1	40029596	.	T	G	0.0	PASS	AC=7;AF=0.06;AN=2;BQ=34.5;DP=113;FA=0.06;INDEL=0;MC=T>G;MT=SOM;NS=3;ORIGIN=RNA;SB=0.23;SOMATIC;SS=2;START=0;STOP=4;VT=SNP	GT:DP:INDEL:START:STOP:AD:AF:BQ:SB	0/0:56:0:0:1:56,0:1.0,0.0:34.98,0.0:0.23,0.0	0/0:45:0:0:0:44,1:0.98,0.02:35.98,21.0:0.18,0.0	0/0:12:0:0:3:6,6:0.5,0.5:36.5,19.5:0.33,0.5
+13	25670500	.	G	T	0.0	PASS	AC=7;AF=0.06;AN=2;BQ=34.5;DP=113;FA=0.06;INDEL=0;MC=T>G;MT=SOM;NS=3;ORIGIN=RNA;SB=0.23;SOMATIC;SS=2;START=0;STOP=4;VT=SNP	GT:DP:INDEL:START:STOP:AD:AF:BQ:SB	0/0:56:0:0:1:56,0:1.0,0.0:34.98,0.0:0.23,0.0	0/0:45:0:0:0:44,1:0.98,0.02:35.98,21.0:0.18,0.0	0/0:12:0:0:3:6,6:0.5,0.5:36.5,19.5:0.33,0.5
