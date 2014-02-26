@@ -25,21 +25,34 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("inputVcfDir", type=str,
                         help="Directory of input VCFs, with wildcards")
+    parser.add_argument("output", type=str,
+                        help="Xena Output file")
     parser.add_argument("-id", type=str, default="",
                         help="CAVM ID")
     args = parser.parse_args()
 
+    fout = open(args.output,'w')
+    fout.write(string.join(["sample","chr","start","end","gene","reference","alt","effect","DNA_AF","RNA_AF"],"\t")+"\n")
+    fout.close()
+
     for vcfFile in os.listdir(args.inputVcfDir):
         if re.search("\.vcf$", vcfFile):
+            #file size >0
+            if args.inputVcfDir[-1]=="/":
+                if os.stat(args.inputVcfDir+vcfFile).st_size ==0:
+                    continue
+            else:
+                if os.stat(args.inputVcfDir+"/"+vcfFile).st_size ==0:
+                    continue
             if args.id != "":
                 cavmId = vcfFile.split("/")[-1]
             else:
                 #tumorBarcode = re.split("[_\.]", vcfFile)[1]
                 #cavmId = "-".join(tumorBarcode.split("-")[0:4])[:-1]
                 cavmId= findSampleID (args.inputVcfDir+"/"+vcfFile)
-
+                
             vcfPathname = args.inputVcfDir + "/" + vcfFile
-            cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId
+            cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
             subprocess.call(cmd, shell=True)
         
 

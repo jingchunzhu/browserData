@@ -11,7 +11,27 @@ class vcfRow(object):
     """This object contains an individual row of VCF output"""
     def __init__(self, row, columnLabels):
         tokens = row[:-1].split("\t")
-        self.chr = tokens[0]
+        #chromosome notation
+        chrom = tokens[0]
+        if string.upper(chrom[0:3])== "CHR": 
+            chrom[0:3]="chr"
+        elif string.upper(chrom[0:2])== "CH" and string.upper(chrom[2])!="R": 
+            chrom= "chr"+chrom[2:]
+        elif chrom in ["23","X","x"]:
+            chrom="chrX"
+        elif chrom in ["24","Y","y"]:
+            chrom="chrY"
+        elif chrom in ["25","M","m"]:
+            chrom="chrM"
+        else:
+            chrom="chr"+chrom
+
+        if chrom == "chr23":
+            chrom="chrX"
+        if chrom == "chr24":
+            chrom="chrY"
+
+        self.chr = chrom
         self.start = int(tokens[1])
         self.strand = tokens[2]
         self.reference = tokens[3]
@@ -23,7 +43,7 @@ class vcfRow(object):
         RNA_TUMOR = tokens[11]
         
         #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
-        GT_code = self._findGTCode(format, DNA_TUMOR, RNA_TUMOR)
+        GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR)
         if GT_code !=None:
             self.alt = string.split(tokens[4],",")[GT_code-1]
         else:
@@ -35,7 +55,7 @@ class vcfRow(object):
             self.DNA_AF, self.RNA_AF= "NA","NA"
         else:
             ID="AF"
-            val =self._parseDNA_TUMOR_ALT_ID(ID,format,DNA_TUMOR, RNA_TUMOR)
+            val =self._parse_TUMOR_ALT_ID(ID,format,DNA_TUMOR, RNA_TUMOR, GT_code)
             if val != None:
                 self.DNA_AF, self.RNA_AF= val
             else: # returned None
@@ -45,9 +65,9 @@ class vcfRow(object):
         for thisSubToken in tokens[7].split(";"):
             if re.search("^EFF=", thisSubToken):
                 effectsString = thisSubToken
-        self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels)
+        self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels, GT_code)
 
-    def _findGTCode(self, format, DNA_TUMOR, RNA_TUMOR):
+    def _findGTCode(self, chrom, format, DNA_TUMOR, RNA_TUMOR):
         pos=-1 
         data= string.split(format,":")
         for i in range(0,len(data)):
@@ -60,15 +80,55 @@ class vcfRow(object):
         if DNA_TUMOR not in ["","."]:
             data= string.split(DNA_TUMOR,":")
             DNA_GT_code = int(string.split(data[pos],'/')[-1]) # the last segment
+            if DNA_GT_code ==0 and chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
+                #parse data to figure this out really stupid way to do it.
+                AF_pos=-1 
+                data= string.split(format,":")
+                for i in range(0,len(data)):
+                    if data[i]== "AF":  
+                        AF_pos=i
+                if AF_pos==-1 :
+                    DNA_GT_code =-1
+                elif DNA_TUMOR not in ["","."]:
+                    data= string.split(DNA_TUMOR,":")[1:]
+                    data = string.split(data[AF_pos],",")
+                    if len(data)==2: # ref, alt1
+                        DNA_GT_code =1
+                    elif float(data[1])> float(data[2]): #ref, alt1, alt2
+                        DNA_GT_code =1
+                    else:
+                        DNA_GT_code =2
+                else:
+                    DNA_GT_code =-1
         else:
             DNA_GT_code =-1
 
         if RNA_TUMOR not in ["","."]:
             data= string.split(RNA_TUMOR,":")
             RNA_GT_code = int(string.split(data[pos],'/')[-1]) # the last segment
+            if DNA_GT_code ==0 and chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
+                #parse data to figure this out myself! 
+                AF_pos=-1 
+                data= string.split(format,":")
+                for i in range(0,len(data)):
+                    if data[i]== "AF":  
+                        AF_pos=i
+                if AF_pos==-1 :
+                    RNA_GT_code =-1
+                elif RNA_TUMOR not in ["","."]:
+                    data= string.split(RNA_TUMOR,":")[1:]
+                    data = string.split(data[AF_pos],",")
+                    if len(data)==2: # ref, alt1
+                        RNA_GT_code =1
+                    elif float(data[1])> float(data[2]):#ref, alt1, alt2
+                        RNA_GT_code =1
+                    else:
+                        RNA_GT_code =2
+                else:
+                    RNA_GT_code =-1
         else:
             RNA_GT_code =-1
-            
+
         if DNA_GT_code in [-1,0] and RNA_GT_code > 0:
             return RNA_GT_code
         if RNA_GT_code in [-1,0] and DNA_GT_code >0:
@@ -80,7 +140,7 @@ class vcfRow(object):
         if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code:
             return None
         
-    def _parseDNA_TUMOR_ALT_ID (self, ID,format,DNA_TUMOR,RNA_TUMOR):
+    def _parse_TUMOR_ALT_ID (self, ID,format,DNA_TUMOR,RNA_TUMOR, GT_code):
         #get the "ID" column in VCF
         pos=-1 
         data= string.split(format,":")
@@ -92,18 +152,18 @@ class vcfRow(object):
 
         if DNA_TUMOR not in ["","."]:
             data= string.split(DNA_TUMOR,":")
-            DNA_ID_val = string.split(data[pos],",")[-1]  # the last segment is for the ALT allele
+            DNA_ID_val = string.split(data[pos],",")[GT_code]  
         else:
             DNA_ID_val="NA"
             
         if RNA_TUMOR not in ["","."]:
             data= string.split(RNA_TUMOR,":")
-            RNA_ID_val = string.split(data[pos],",")[-1]  # the last segment is for the ALT allele
+            RNA_ID_val = string.split(data[pos],",")[GT_code]  
         else:
             RNA_ID_val ="NA"
         return [DNA_ID_val,RNA_ID_val]
     
-    def _parseEffectsPerGene(self, effectString, columnLabels):
+    def _parseEffectsPerGene(self, effectString, columnLabels, GT_code):
         effectPerGene = dict()
         effects = re.sub("EFF=", "", effectString).split(",")
         for thisEffect in effects:
@@ -119,6 +179,11 @@ class vcfRow(object):
             effect = dict()
             for ii in range(0,len(effectTokens)):
                 effect[columnLabels[ii]] = effectTokens[ii]
+
+            #match GT_code
+            if GT_code != int(effect["Genotype_Number"]):
+                continue
+
             effect["effect"] = effectType
             #
             # Parse through the list of effects.  Extract the gene.
@@ -174,15 +239,17 @@ class vcf(object):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("ID", type=str, help="Entry for the ID column")
+    parser.add_argument("output", type=str, help="outputfile")
     args = parser.parse_args()
 
     myVcf = vcf(sys.stdin)
+    fout =open(args.output,'a')
     for row in myVcf.read():
         for gene in row.effectPerGene.keys():
-            print "%s\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s" % (args.ID, row.chr, row.start,
-                                                  row.end, gene, row.reference, row.alt, 
-                                                  row.effectPerGene[gene]["effect"], row.DNA_AF, row.RNA_AF)
-            
+            fout.write(string.join([args.ID, row.chr, str(row.start),
+                                    str(row.end), gene, row.reference, row.alt, 
+                                    row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF)],"\t")+"\n")
+    fout.close()
 if __name__ == '__main__':
         main()
 
