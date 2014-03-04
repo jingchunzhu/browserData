@@ -43,7 +43,7 @@ class vcfRow(object):
         RNA_TUMOR = tokens[11]
         
         #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
-        GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR)
+        GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR, self.start)
         if GT_code !=None:
             self.alt = string.split(tokens[4],",")[GT_code-1]
         else:
@@ -67,7 +67,7 @@ class vcfRow(object):
                 effectsString = thisSubToken
         self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels, GT_code)
 
-    def _findGTCode(self, chrom, format, DNA_TUMOR, RNA_TUMOR):
+    def _findGTCode(self, chrom, format, DNA_TUMOR, RNA_TUMOR, start):
         pos=-1 
         data= string.split(format,":")
         for i in range(0,len(data)):
@@ -77,27 +77,35 @@ class vcfRow(object):
         if pos ==-1:
             return None
 
+        if chrom in ["chrX","chrY"]:
+            DNA_AD=-1
+            RNA_AD=-1
+
         if DNA_TUMOR not in ["","."]:
             data= string.split(DNA_TUMOR,":")
             DNA_GT_code = int(string.split(data[pos],'/')[-1]) # the last segment
-            if DNA_GT_code ==0 and chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
+            if chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
                 #parse data to figure this out really stupid way to do it.
                 AF_pos=-1 
                 data= string.split(format,":")
                 for i in range(0,len(data)):
-                    if data[i]== "AF":  
-                        AF_pos=i
+                    if data[i]== "AD":  
+                        AF_pos= i
                 if AF_pos==-1 :
                     DNA_GT_code =-1
                 elif DNA_TUMOR not in ["","."]:
-                    data= string.split(DNA_TUMOR,":")[1:]
+                    data= string.split(DNA_TUMOR,":")
                     data = string.split(data[AF_pos],",")
                     if len(data)==2: # ref, alt1
                         DNA_GT_code =1
-                    elif float(data[1])> float(data[2]): #ref, alt1, alt2
-                        DNA_GT_code =1
+                        DNA_AD = float(data[DNA_GT_code])
                     else:
-                        DNA_GT_code =2
+                        DNA_GT_code =1
+                        DNA_AD = float(data[DNA_GT_code])
+                        for i in range (2, len(data)):
+                            if float(data[i]) > float(data[DNA_GT_code]):#ref, alt1, alt2, alt3:
+                                DNA_GT_code = i
+                                DNA_AD = float(data[DNA_GT_code])
                 else:
                     DNA_GT_code =-1
         else:
@@ -106,24 +114,29 @@ class vcfRow(object):
         if RNA_TUMOR not in ["","."]:
             data= string.split(RNA_TUMOR,":")
             RNA_GT_code = int(string.split(data[pos],'/')[-1]) # the last segment
-            if DNA_GT_code ==0 and chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
+            if chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
                 #parse data to figure this out myself! 
                 AF_pos=-1 
                 data= string.split(format,":")
                 for i in range(0,len(data)):
-                    if data[i]== "AF":  
+                    if data[i]== "AD":  
                         AF_pos=i
                 if AF_pos==-1 :
                     RNA_GT_code =-1
                 elif RNA_TUMOR not in ["","."]:
-                    data= string.split(RNA_TUMOR,":")[1:]
+                    data= string.split(RNA_TUMOR,":")
                     data = string.split(data[AF_pos],",")
                     if len(data)==2: # ref, alt1
                         RNA_GT_code =1
-                    elif float(data[1])> float(data[2]):#ref, alt1, alt2
-                        RNA_GT_code =1
+                        RNA_AD = float(data[RNA_GT_code])
                     else:
-                        RNA_GT_code =2
+                        RNA_GT_code =1
+                        RNA_AD = float(data[RNA_GT_code])
+                        print data
+                        for i in range (2, len(data)):
+                            if float(data[i]) > float(data[RNA_GT_code]):#ref, alt1, alt2, alt3:
+                                RNA_GT_code = i
+                                RNA_AD = float(data[RNA_GT_code])
                 else:
                     RNA_GT_code =-1
         else:
@@ -137,8 +150,13 @@ class vcfRow(object):
             return DNA_GT_code
         if DNA_GT_code <= 0 and RNA_GT_code <= 0:
             return None
-        if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code:
+        if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom not in ["chrX","chrY"]):  
             return None
+        if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom in ["chrX","chrY"]):  # really stupid RADIA chrX and Y handling
+            if RNA_AD > DNA_AD:
+               return RNA_GT_code
+            else:
+               return DNA_GT_code
         
     def _parse_TUMOR_ALT_ID (self, ID,format,DNA_TUMOR,RNA_TUMOR, GT_code):
         #get the "ID" column in VCF

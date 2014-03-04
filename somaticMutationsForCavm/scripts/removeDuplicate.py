@@ -27,6 +27,7 @@ for line in fin.readlines():
     line = string.strip(line)
     if line[:6] =="sample":
         fout.write(line+"\n")
+        continue
     data = string.split(line,'\t')
     sample = data[0]
     chrom = data[1]
