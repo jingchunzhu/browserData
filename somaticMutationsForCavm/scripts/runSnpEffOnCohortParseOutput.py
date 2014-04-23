@@ -32,7 +32,7 @@ def main():
     args = parser.parse_args()
 
     fout = open(args.output,'w')
-    fout.write(string.join(["sample","chr","start","end","gene","reference","alt","effect","DNA_AF","RNA_AF"],"\t")+"\n")
+    fout.write(string.join(["sample","chr","start","end","gene","reference","alt","effect","DNA_AF","RNA_AF","Amino_Acid_Change"],"\t")+"\n")
     fout.close()
 
     for vcfFile in os.listdir(args.inputVcfDir):

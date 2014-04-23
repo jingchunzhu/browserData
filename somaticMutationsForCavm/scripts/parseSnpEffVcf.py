@@ -40,8 +40,11 @@ class vcfRow(object):
         # this could be all specific to RADIA output
         format =tokens[8] 
         DNA_TUMOR =tokens[10] 
-        RNA_TUMOR = tokens[11]
-        
+        if len(tokens)>11:
+            RNA_TUMOR = tokens[11]
+        else:
+            RNA_TUMOR=''
+            
         #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
         GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR, self.start)
         if GT_code !=None:
@@ -264,9 +267,12 @@ def main():
     fout =open(args.output,'a')
     for row in myVcf.read():
         for gene in row.effectPerGene.keys():
+            AA_Change = row.effectPerGene[gene]["Amino_Acid_Change"]
+            #if AA_Change!=""  and re.match ("[0-9]", AA_Change[-1]):
+            #    AA_Change=""
             fout.write(string.join([args.ID, row.chr, str(row.start),
                                     str(row.end), gene, row.reference, row.alt, 
-                                    row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF)],"\t")+"\n")
+                                    row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF),AA_Change],"\t")+"\n")
     fout.close()
 if __name__ == '__main__':
         main()
