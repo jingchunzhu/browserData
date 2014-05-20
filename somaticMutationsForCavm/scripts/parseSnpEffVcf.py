@@ -33,41 +33,48 @@ class vcfRow(object):
 
         self.chr = chrom
         self.start = int(tokens[1])
-        self.strand = tokens[2]
+        self.ID = tokens[2]
         self.reference = tokens[3]
         self.end = self.start + len(self.reference) - 1
 
-        # this could be all specific to RADIA output
-        format =tokens[8] 
-        DNA_TUMOR =tokens[10] 
-        if len(tokens)>11:
-            RNA_TUMOR = tokens[11]
-        else:
-            RNA_TUMOR=''
-            
-        #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
-        GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR, self.start)
-        if GT_code !=None:
-            self.alt = string.split(tokens[4],",")[GT_code-1]
-        else:
-            #print "GT error", row
-            self.alt = "NA"
-        
-        # AF allel frequency # this is all specific to RADIA output
-        if GT_code == None:
-            self.DNA_AF, self.RNA_AF= "NA","NA"
-        else:
-            ID="AF"
-            val =self._parse_TUMOR_ALT_ID(ID,format,DNA_TUMOR, RNA_TUMOR, GT_code)
-            if val != None:
-                self.DNA_AF, self.RNA_AF= val
-            else: # returned None
-                #print "AF error", row
-                self.DNA_AF, self.RNA_AF= "NA","NA"
-
+        effectsString = ""
         for thisSubToken in tokens[7].split(";"):
             if re.search("^EFF=", thisSubToken):
                 effectsString = thisSubToken
+
+        GT_code=None
+
+        if len(tokens)<=8:
+            pass
+        else:
+            # this could be all specific to RADIA output
+            format =tokens[8] 
+            DNA_TUMOR =tokens[10] 
+            if len(tokens)>11:
+                RNA_TUMOR = tokens[11]
+            else:
+                RNA_TUMOR=''
+            
+            #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
+            GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR, self.start)
+            if GT_code !=None:
+                self.alt = string.split(tokens[4],",")[GT_code-1]
+            else:
+                #print "GT error", row
+                self.alt = "NA"
+        
+            # AF allel frequency # this is all specific to RADIA output
+            if GT_code == None:
+                self.DNA_AF, self.RNA_AF= "NA","NA"
+            else:
+                ID="AF"
+                val =self._parse_TUMOR_ALT_ID(ID,format,DNA_TUMOR, RNA_TUMOR, GT_code)
+                if val != None:
+                    self.DNA_AF, self.RNA_AF= val
+                else: # returned None
+                    #print "AF error", row
+                    self.DNA_AF, self.RNA_AF= "NA","NA"
+
         self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels, GT_code)
 
     def _findGTCode(self, chrom, format, DNA_TUMOR, RNA_TUMOR, start):
@@ -181,10 +188,12 @@ class vcfRow(object):
             data= string.split(RNA_TUMOR,":")
             RNA_ID_val = string.split(data[pos],",")[GT_code]  
         else:
-            RNA_ID_val ="NA"
+            RNA_ID_val="NA"
         return [DNA_ID_val,RNA_ID_val]
     
     def _parseEffectsPerGene(self, effectString, columnLabels, GT_code):
+        if effectString =="":
+            return {}
         effectPerGene = dict()
         effects = re.sub("EFF=", "", effectString).split(",")
         for thisEffect in effects:
@@ -202,7 +211,7 @@ class vcfRow(object):
                 effect[columnLabels[ii]] = effectTokens[ii]
 
             #match GT_code
-            if GT_code != int(effect["Genotype_Number"]):
+            if GT_code and GT_code != int(effect["Genotype_Number"]):
                 continue
 
             effect["effect"] = effectType
@@ -266,13 +275,16 @@ def main():
     myVcf = vcf(sys.stdin)
     fout =open(args.output,'a')
     for row in myVcf.read():
-        for gene in row.effectPerGene.keys():
-            AA_Change = row.effectPerGene[gene]["Amino_Acid_Change"]
-            #if AA_Change!=""  and re.match ("[0-9]", AA_Change[-1]):
-            #    AA_Change=""
+        if len(row.effectPerGene)!=0:
+            for gene in row.effectPerGene.keys():
+                AA_Change = row.effectPerGene[gene]["Amino_Acid_Change"]
+                fout.write(string.join([args.ID, row.chr, str(row.start),
+                                        str(row.end), gene, row.reference, row.alt, 
+                                        row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF),AA_Change],"\t")+"\n")
+        else:
             fout.write(string.join([args.ID, row.chr, str(row.start),
-                                    str(row.end), gene, row.reference, row.alt, 
-                                    row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF),AA_Change],"\t")+"\n")
+                                    str(row.end), "", row.reference, row.alt, 
+                                    "", str(row.DNA_AF), str(row.RNA_AF),""],"\t")+"\n")
     fout.close()
 if __name__ == '__main__':
         main()

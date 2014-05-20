@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import os
+import os,sys
 import re
 import subprocess
 import string
@@ -24,7 +24,7 @@ def findSampleID (vcfFile): # this isRADIA specific
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("inputVcfDir", type=str,
-                        help="Directory of input VCFs, with wildcards")
+                        help="Directory of input VCFs, with wildcards | a single VCF file")
     parser.add_argument("output", type=str,
                         help="Xena Output file")
     parser.add_argument("-id", type=str, default="",
@@ -35,25 +35,34 @@ def main():
     fout.write(string.join(["sample","chr","start","end","gene","reference","alt","effect","DNA_AF","RNA_AF","Amino_Acid_Change"],"\t")+"\n")
     fout.close()
 
-    for vcfFile in os.listdir(args.inputVcfDir):
-        if re.search("\.vcf$", vcfFile):
-            #file size >0
-            if args.inputVcfDir[-1]=="/":
-                if os.stat(args.inputVcfDir+vcfFile).st_size ==0:
-                    continue
-            else:
-                if os.stat(args.inputVcfDir+"/"+vcfFile).st_size ==0:
-                    continue
-            if args.id != "":
-                cavmId = vcfFile.split("/")[-1]
-            else:
-                #tumorBarcode = re.split("[_\.]", vcfFile)[1]
-                #cavmId = "-".join(tumorBarcode.split("-")[0:4])[:-1]
-                cavmId= findSampleID (args.inputVcfDir+"/"+vcfFile)
-                
-            vcfPathname = args.inputVcfDir + "/" + vcfFile
-            cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
-            subprocess.call(cmd, shell=True)
+    if args.id !="":
+        cavmId = args.id
+        vcfPathname = args.inputVcfDir
+        cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
+        subprocess.call(cmd, shell=True)
+    
+    else:
+        for vcfFile in os.listdir(args.inputVcfDir):
+            if re.search("\.vcf$", vcfFile):
+                #file size >0
+                if args.inputVcfDir[-1]=="/":
+                    if os.stat(args.inputVcfDir+vcfFile).st_size ==0:
+                        continue
+                else:
+                    if os.stat(args.inputVcfDir+"/"+vcfFile).st_size ==0:
+                        continue
+                if args.id != "":
+                    cavmId = args.id
+                else:
+                    cavmId= findSampleID (args.inputVcfDir+"/"+vcfFile)
+
+                if cavmId =="":
+                    print "no id specified in vcf file hearder or through command line\n"
+                    sys.exit()
+
+                vcfPathname = args.inputVcfDir + "/" + vcfFile
+                cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
+                subprocess.call(cmd, shell=True)
         
 
 if __name__ == '__main__':
