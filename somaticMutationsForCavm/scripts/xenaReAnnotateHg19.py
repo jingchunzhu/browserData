@@ -71,9 +71,9 @@ for line in fin.readlines():
     fvcf.write(string.join([chr,start,sample, ref,alt],'\t')+'\n')
 fvcf.close()
 
-parseSNPeffToXenaOutput (snpeffFile, output, dic)
-sys.exit()
 #re-run SNPeff
 dir ="/inside/home/jzhu/scripts/vcfXenaData/browserDataMelisssa/somaticMutationsForCavm/"
 os.system("java -jar -Xmx2480m "+dir + "/snpEff/snpEff.jar hg19 -c "+ dir + "snpEff/snpEff.config -quiet -sequenceOntology -no-downstream -no-upstream -no-intergenic -no-intron -v -noStats .tmp > "+ snpeffFile )
 
+parseSNPeffToXenaOutput (snpeffFile, output, dic)
+sys.exit()
