@@ -13,8 +13,8 @@ class vcfRow(object):
         tokens = row[:-1].split("\t")
         #chromosome notation
         chrom = tokens[0]
-        if string.upper(chrom[0:3])== "CHR": 
-            chrom[0:3]="chr"
+        if string.upper(chrom[0:3])== "CHR" and chrom[0:3]!="chr":
+            chrom="chr"+chrom[3:]
         elif string.upper(chrom[0:2])== "CH" and string.upper(chrom[2])!="R": 
             chrom= "chr"+chrom[2:]
         elif chrom in ["23","X","x"]:
@@ -228,6 +228,9 @@ class vcfRow(object):
                 worstImpactYet = effectPerGene[thisGene]["Effect_Impact"]
                 if impact[impactThisEffect] > impact[worstImpactYet]:
                     effectPerGene[thisGene] = effect
+                elif impact[impactThisEffect] == impact[worstImpactYet]:
+                    if effect["Amino_Acid_length"] > effectPerGene[thisGene]["Amino_Acid_length"]:
+                        effectPerGene[thisGene] = effect
         return(effectPerGene)
 
             
