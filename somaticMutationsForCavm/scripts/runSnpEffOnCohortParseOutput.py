@@ -110,9 +110,10 @@ def main():
         subprocess.call(cmd, shell=True)
 
         for vcfFile in os.listdir(tmpDir):
-            cavmId= findSampleID (tmpDir+vcfFile)
-            cmd= "cat "+ tmpDir+vcfFile +" | " +os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
-            subprocess.call(cmd, shell=True)
+            if re.search("\.eff.vcf$", vcfFile) :
+                cavmId= findSampleID (tmpDir+vcfFile)
+                cmd= "cat "+ tmpDir+vcfFile +" | " +os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
+                subprocess.call(cmd, shell=True)
 
         os.system("rm -rf "+tmpDir)
 

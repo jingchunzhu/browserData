@@ -380,17 +380,13 @@ def main():
                                     str(row.end), "", row.reference, row.alt, 
                                     "", str(row.DNA_AF), str(row.RNA_AF),""],"\t")+"\n")
     fout.close()
+
     if float(good)/float(total)>0.9:
         os.system("cat "+args.ID+" >> "+args.output)
         os.system("rm -f "+args.ID)
     else:
         os.system("rm -f "+args.ID)
         print "throw out due to "+ str(1- float(good)/float(total))+ " calls in vcf dose not make sense", args.ID
+
 if __name__ == '__main__':
         main()
-
-        
-    
-    
-                
-    
