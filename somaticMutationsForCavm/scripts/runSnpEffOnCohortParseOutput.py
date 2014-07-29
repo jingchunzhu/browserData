@@ -5,6 +5,7 @@ import os,sys
 import re
 import subprocess
 import string
+import gzip
 
 os.sys.path.insert(0, os.path.dirname(__file__) )
 
@@ -21,15 +22,20 @@ def findSampleID (vcfFile): # this isRADIA specific
         else:
             continue
 
-def passingSomatic (vcfFile, cavmId):
-    ## really stupid thing to get rid of vcf headers
-    output = ".tmp_"+cavmId
-    fin =open(vcfFile,'r')
+def passingSomatic (vcfFile, directory, cavmId):
+    output = directory+".tmp_"+cavmId
+    if re.search("\.vcf.gz$", vcfFile):
+        fin = gzip.open(vcfFile, 'rb')
+    elif re.search("\.vcf$", vcfFile):
+        fin =open(vcfFile,'r')
+
     fout= open(output,'w')
     while 1:
         line = fin.readline()
         if line=="":
             break
+        if line[0]=="#":
+            fout.write(line)
         elif string.find(line,"PASS")!=-1 and string.find (line,"SOM")!=-1  :# this isRADIA specific
             fout.write(line)
         else:
@@ -58,7 +64,7 @@ def main():
         cavmId = args.id
         vcfPathname = args.inputVcfDir
         if args.passingSomatic =="1":
-            vcfPathname = passingSomatic(vcfPathname, cavmId)
+            vcfPathname = passingSomatic(vcfPathname, "./", cavmId)
 
         cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
         subprocess.call(cmd, shell=True)
@@ -67,8 +73,15 @@ def main():
             os.system("rm "+vcfPathname)
 
     else:
+        fList=open(".fileList",'w')
+        tmpDir="new/"
+        if os.path.exists(tmpDir):
+            os.system("rm -rf "+ tmpDir)
+        os.system("mkdir "+tmpDir)
+
+
         for vcfFile in os.listdir(args.inputVcfDir):
-            if re.search("\.vcf$", vcfFile):
+            if re.search("\.vcf$", vcfFile) or re.search("\.vcf.gz$", vcfFile):
                 #file size >0
                 if args.inputVcfDir[-1]=="/":
                     if os.stat(args.inputVcfDir+vcfFile).st_size ==0:
@@ -76,27 +89,32 @@ def main():
                 else:
                     if os.stat(args.inputVcfDir+"/"+vcfFile).st_size ==0:
                         continue
-                if args.id != "":
-                    cavmId = args.id
-                else:
-                    cavmId= findSampleID (args.inputVcfDir+"/"+vcfFile)
-                
-                if cavmId =="":
-                    print "no id specified in vcf file hearder or through command line\n"
-                    sys.exit()
-
+ 
                 vcfPathname = args.inputVcfDir + "/" + vcfFile
+
+                cavmId= findSampleID (args.inputVcfDir + "/" + vcfFile)
 
                 #passing somatic
                 if args.passingSomatic =="1":
-                    vcfPathname = passingSomatic(vcfPathname, cavmId)
-                
-                print vcfPathname
-                cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeq.bash "+vcfPathname +" | "+ os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
-                subprocess.call(cmd, shell=True)
-        
-                if vcfPathname != args.inputVcfDir + "/" + vcfFile: 
-                    os.system("rm "+vcfPathname)
+                    vcfPathname = passingSomatic(vcfPathname, tmpDir, cavmId)
+                    fList.write(vcfPathname+"\n")
+                elif re.search("\.vcf$", vcfFile):
+                    os.system("cp " +  args.inputVcfDir + "/" + vcfFile + " "+ tmpDir)
+                    fList.write(tmpDir+vcfFile+"\n")
+                elif re.search("\.vcf.gz$", vcfFile):
+                    os.system("cp " +  args.inputVcfDir + "/" + vcfFile + " "+ tmpDir + "| gunzip "+ tmpDir+vcfFile )
+                    fList.write(tmpDir+vcfFile[:-3]+"\n")
+            
+        fList.close()
+        cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeqFileList.bash .fileList"
+        subprocess.call(cmd, shell=True)
+
+        for vcfFile in os.listdir(tmpDir):
+            cavmId= findSampleID (tmpDir+vcfFile)
+            cmd= "cat "+ tmpDir+vcfFile +" | " +os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
+            subprocess.call(cmd, shell=True)
+
+        os.system("rm -rf "+tmpDir)
 
 if __name__ == '__main__':
         main()
