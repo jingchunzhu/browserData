@@ -10,7 +10,7 @@ impact = {"MODIFIER":0, "LOW":1, "MODERATE":2, "HIGH":3}
 
 class vcfRow(object):
     """This object contains an individual row of VCF output"""
-    def __init__(self, row, columnLabels):
+    def __init__(self, row, columnLabels, EFFECT=1):
         tokens = row[:-1].split("\t")
         #chromosome notation
         chrom = tokens[0]
@@ -88,8 +88,15 @@ class vcfRow(object):
                 #print "GT error", row
                 self.alt = "NA"
                 self.DNA_AF, self.RNA_AF= "NA","NA"
+        if EFFECT:
+            self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels, GT_code)
+        return
 
-        self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels, GT_code)
+    def get_DNAVAF(self):
+        return self.DNA_AF
+
+    def get_RNAVAF(self):
+        return self.RNA_AF
 
     def _findGTCode(self, chrom, format, DNA_TUMOR, RNA_TUMOR, start):
         pos=-1 
@@ -318,30 +325,6 @@ class vcf(object):
     def read(self):
         return self._rows
 
-def round_sigfigs(num, sig_figs):
-    """Round to specified number of sigfigs.
-
-    >>> round_sigfigs(0, sig_figs=4)
-    0
-    >>> int(round_sigfigs(12345, sig_figs=2))
-    12000
-    >>> int(round_sigfigs(-12345, sig_figs=2))
-    -12000
-    >>> int(round_sigfigs(1, sig_figs=2))
-    1
-    >>> '{0:.3}'.format(round_sigfigs(3.1415, sig_figs=2))
-    '3.1'
-    >>> '{0:.3}'.format(round_sigfigs(-3.1415, sig_figs=2))
-    '-3.1'
-    >>> '{0:.5}'.format(round_sigfigs(0.00098765, sig_figs=2))
-    '0.00099'
-    >>> '{0:.6}'.format(round_sigfigs(0.00098765, sig_figs=3))
-    '0.000988'
-    """
-    if num != 0:
-        return round(num, -int(math.floor(math.log10(abs(num))) - (sig_figs - 1)))
-    else:
-        return 0  # Can't take the log of 0
 
 
 def main():
@@ -372,12 +355,14 @@ def main():
         if len(row.effectPerGene)!=0:
             for gene in row.effectPerGene.keys():
                 AA_Change = row.effectPerGene[gene]["Amino_Acid_Change"]
+                if AA_Change !="":
+                    AA_Change="p."+AA_Change
                 fout.write(string.join([args.ID, row.chr, str(row.start),
-                                        str(row.end), gene, row.reference, row.alt, 
+                                        str(row.end), row.reference, row.alt, gene,
                                         row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF),AA_Change],"\t")+"\n")
         else:
             fout.write(string.join([args.ID, row.chr, str(row.start),
-                                    str(row.end), "", row.reference, row.alt, 
+                                    str(row.end), row.reference, row.alt,"", 
                                     "", str(row.DNA_AF), str(row.RNA_AF),""],"\t")+"\n")
     fout.close()
 
@@ -390,3 +375,5 @@ def main():
 
 if __name__ == '__main__':
         main()
+
+
