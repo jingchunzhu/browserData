@@ -16,7 +16,7 @@ class vcfRow(object):
         chrom = tokens[0]
         if string.upper(chrom[0:3])== "CHR" and chrom[0:3]!="chr":
             chrom="chr"+chrom[3:]
-        elif string.upper(chrom[0:2])== "CH" and string.upper(chrom[2])!="R": 
+        elif string.upper(chrom[0:2])== "CH" and string.upper(chrom[2])!="R":
             chrom= "chr"+chrom[2:]
         elif chrom in ["23","X","x"]:
             chrom="chrX"
@@ -36,7 +36,11 @@ class vcfRow(object):
         self.start = int(tokens[1])
         self.ID = tokens[2]
         self.reference = tokens[3]
+        self.alt = tokens[4]
         self.end = self.start + len(self.reference) - 1
+        self.DNA_AF=""
+        self.RNA_AF=""
+        self.NORMAL_AF=""
 
         effectsString = ""
         for thisSubToken in tokens[7].split(";"):
@@ -49,15 +53,15 @@ class vcfRow(object):
             pass
         else:
             # this could be all specific to RADIA output
-            format =tokens[8] 
-            DNA_TUMOR =tokens[10] 
+            format =tokens[8]
+            DNA_NORMAL = tokens[9]
+            DNA_TUMOR =tokens[10]
             if len(tokens)>11:
                 RNA_TUMOR = tokens[11]
             else:
                 RNA_TUMOR=''
-            
-            #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
 
+            #get the ALT base code (in VCF: GT=0,1,2?, 1 and 2 are acceptable)
             GT_code = self._findGTCode(self.chr, format, DNA_TUMOR, RNA_TUMOR, self.start)
 
             if GT_code !=None:
@@ -84,10 +88,32 @@ class vcfRow(object):
                 else: # returned None
                     #print "AF error", row
                     self.DNA_AF, self.RNA_AF= "NA","NA"
+
+                #get info on normal sample
+                ID = "AD"
+                val = self._parse_NORMAL_ALT_ID (ID,format,DNA_NORMAL, GT_code)
+                if val != None:
+                    if val =="NA":
+                        val =0
+                    self.NORMAL_AD = val
+                    ID ="DP"
+                    val = self._parse_NORMAL_SINGLE_ID(ID,format,DNA_NORMAL)
+                    if val != None:
+                        self.NORMAL_DP = val
+                        try:
+                            self.NORMAL_AF = str(float(self.NORMAL_AD) /float(self.NORMAL_DP))
+                        except:
+                            self.NORMAL_AF = "NA"
+                    else:
+                        self.NORMAL_AF = "NA"
+                else:
+                    self.NORMAL_AF = "NA"
             else:
                 #print "GT error", row
                 self.alt = "NA"
                 self.DNA_AF, self.RNA_AF= "NA","NA"
+
+
         if EFFECT:
             self.effectPerGene = self._parseEffectsPerGene(effectsString, columnLabels, GT_code)
         return
@@ -98,8 +124,11 @@ class vcfRow(object):
     def get_RNAVAF(self):
         return self.RNA_AF
 
+    def get_NORMALVAF(self):
+        return self.NORMAL_AF
+
     def _findGTCode(self, chrom, format, DNA_TUMOR, RNA_TUMOR, start):
-        pos=-1 
+        pos=-1
         data= string.split(format,":")
         for i in range(0,len(data)):
             if data[i]== "GT":
@@ -117,12 +146,12 @@ class vcfRow(object):
             data= string.split(DNA_TUMOR,":")
             if len(string.split(data[pos],'/'))>=2:
                 DNA_GT_code = int(string.split(data[pos],'/')[-1]) # the last segment
-            if chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
+            if chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this!
                 #parse data to figure this out really stupid way to do it.
-                AF_pos=-1 
+                AF_pos=-1
                 data= string.split(format,":")
                 for i in range(0,len(data)):
-                    if data[i]== "AD":  
+                    if data[i]== "AD":
                         AF_pos= i
                 if AF_pos==-1 :
                     DNA_GT_code =-1
@@ -150,12 +179,12 @@ class vcfRow(object):
             data= string.split(RNA_TUMOR,":")
             if len(string.split(data[pos],'/'))>=2:
                 RNA_GT_code = int(string.split(data[pos],'/')[-1]) # the last segment
-            if chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this! 
-                #parse data to figure this out myself! 
-                AF_pos=-1 
+            if chrom in ["chrX","chrY"]: ##### the really stupid thing RADIA does to set GT=0 reference on chrX and Y even when there is clear evidence of altnative allele. can't believe this!
+                #parse data to figure this out myself!
+                AF_pos=-1
                 data= string.split(format,":")
                 for i in range(0,len(data)):
-                    if data[i]== "AD":  
+                    if data[i]== "AD":
                         AF_pos=i
                 if AF_pos==-1 :
                     RNA_GT_code =-1
@@ -187,17 +216,39 @@ class vcfRow(object):
             return DNA_GT_code
         if DNA_GT_code <= 0 and RNA_GT_code <= 0:
             return None
-        if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom not in ["chrX","chrY"]):  
+        if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom not in ["chrX","chrY"]):
             return None
         if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom in ["chrX","chrY"]):  # really stupid RADIA chrX and Y handling
             if RNA_AD > DNA_AD:
                return RNA_GT_code
             else:
                return DNA_GT_code
-        
+
+    def _parse_NORMAL_ALT_ID (self, ID, format, DNA_NORMAL, GT_code):
+        #get the "ID" column in VCF
+        pos=-1
+        data= string.split(format,":")
+        for i in range(0,len(data)):
+            if data[i]== ID:
+                pos=i
+        if pos==-1 :
+            return None
+
+        if DNA_NORMAL not in ["","."]:
+            data= string.split(DNA_NORMAL,":")
+            try:
+                DNA_ID_val = string.split(data[pos],",")[GT_code]
+            except:
+                DNA_ID_val="NA"
+        else:
+            DNA_ID_val="NA"
+
+        return DNA_ID_val
+
+
     def _parse_TUMOR_ALT_ID (self, ID,format,DNA_TUMOR,RNA_TUMOR, GT_code):
         #get the "ID" column in VCF
-        pos=-1 
+        pos=-1
         data= string.split(format,":")
         for i in range(0,len(data)):
             if data[i]== ID:
@@ -209,25 +260,43 @@ class vcfRow(object):
         if DNA_TUMOR not in ["","."]:
             data= string.split(DNA_TUMOR,":")
             try:
-                DNA_ID_val = string.split(data[pos],",")[GT_code]  
+                DNA_ID_val = string.split(data[pos],",")[GT_code]
             except:
                 DNA_ID_val="NA"
         else:
             DNA_ID_val="NA"
-            
+
         if RNA_TUMOR not in ["","."]:
             data= string.split(RNA_TUMOR,":")
             try:
-                RNA_ID_val = string.split(data[pos],",")[GT_code]  
+                RNA_ID_val = string.split(data[pos],",")[GT_code]
             except:
                 RNA_ID_val="NA"
         else:
             RNA_ID_val="NA"
         return [DNA_ID_val,RNA_ID_val]
 
+    def _parse_NORMAL_SINGLE_ID (self, ID,format,DNA_NORMAL):
+        #get the "ID" column in VCF
+        pos=-1
+        data= string.split(format,":")
+        for i in range(0,len(data)):
+            if data[i]== ID:
+                pos=i
+        if pos==-1 :
+            return None
+
+        if DNA_NORMAL not in ["","."]:
+            data= string.split(DNA_NORMAL,":")
+            DNA_ID_val = data[pos]
+        else:
+            DNA_ID_val="NA"
+
+        return DNA_ID_val
+
     def _parse_TUMOR_SINGLE_ID (self, ID,format,DNA_TUMOR,RNA_TUMOR):
         #get the "ID" column in VCF
-        pos=-1 
+        pos=-1
         data= string.split(format,":")
         for i in range(0,len(data)):
             if data[i]== ID:
@@ -237,17 +306,17 @@ class vcfRow(object):
 
         if DNA_TUMOR not in ["","."]:
             data= string.split(DNA_TUMOR,":")
-            DNA_ID_val = data[pos]  
+            DNA_ID_val = data[pos]
         else:
             DNA_ID_val="NA"
-            
+
         if RNA_TUMOR not in ["","."]:
             data= string.split(RNA_TUMOR,":")
             RNA_ID_val = data[pos]
         else:
             RNA_ID_val="NA"
         return [DNA_ID_val,RNA_ID_val]
-    
+
     def _parseEffectsPerGene(self, effectString, columnLabels, GT_code):
         if effectString =="":
             return {}
@@ -258,7 +327,7 @@ class vcfRow(object):
             #
             # Given a string such as
             # downstream_gene_variant(MODIFIER||3956||459|CA9|||NM_001216.2||1)
-            # extract the stuff between the parens, divide it by |, and store 
+            # extract the stuff between the parens, divide it by |, and store
             # it in a dictionary indexed by the column labels given as input
             #
             effectTokens = re.sub(".+\(", "",
@@ -290,7 +359,7 @@ class vcfRow(object):
                         effectPerGene[thisGene] = effect
         return(effectPerGene)
 
-            
+
 
 class vcf(object):
     """This object contains the set of rows from a VCF file"""
@@ -301,7 +370,7 @@ class vcf(object):
         for row in stream:
             if re.search("^##INFO=<ID=EFF", row):
                 """Given a line of format
-                
+
                 ##INFO=<ID=EFF,Number=.,Type=String,Description="Pred<icted
                 effects for this variant.Format: 'Effect (
                 Effect_Impact | Functional_Class | Codon_Change |
@@ -377,19 +446,29 @@ def main():
             row.RNA_AF= round_sigfigs(float(row.RNA_AF),3)
         else:
             row.RNA_AF=""
-
+        if str(row.NORMAL_AF) not in ["NA",""]:
+            row.NORMAL_AF= round_sigfigs(float(row.NORMAL_AF),3)
+        else:
+            row.NORMAL_AF=""
         if len(row.effectPerGene)!=0:
             for gene in row.effectPerGene.keys():
                 AA_Change = row.effectPerGene[gene]["Amino_Acid_Change"]
-                if AA_Change !="":
+                if AA_Change !="" and AA_Change[:2]!="p.":
                     AA_Change="p."+AA_Change
                 fout.write(string.join([args.ID, row.chr, str(row.start),
-                                        str(row.end), row.reference, row.alt, gene,
-                                        row.effectPerGene[gene]["effect"], str(row.DNA_AF), str(row.RNA_AF),AA_Change],"\t")+"\n")
+                                        str(row.end), row.reference, row.alt,
+                                        gene,row.effectPerGene[gene]["effect"],
+                                        str(row.DNA_AF), str(row.RNA_AF),AA_Change,
+                                        str(row.NORMAL_AF)],"\t")+"\n")
         else:
+            gene =""
+            AA_Change=""
+            effect =""
             fout.write(string.join([args.ID, row.chr, str(row.start),
-                                    str(row.end), row.reference, row.alt,"", 
-                                    "", str(row.DNA_AF), str(row.RNA_AF),""],"\t")+"\n")
+                                    str(row.end), row.reference, row.alt,
+                                    gene,effect,
+                                    str(row.DNA_AF), str(row.RNA_AF),AA_Change,
+                                    str(row.NORMAL_AF)],"\t")+"\n")
     fout.close()
 
     if float(good)/float(total)>0.9:
