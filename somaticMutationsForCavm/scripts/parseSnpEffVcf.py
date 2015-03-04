@@ -458,8 +458,9 @@ def main():
                 fout.write(string.join([args.ID, row.chr, str(row.start),
                                         str(row.end), row.reference, row.alt,
                                         gene,row.effectPerGene[gene]["effect"],
-                                        str(row.DNA_AF), str(row.RNA_AF),AA_Change,
-                                        str(row.NORMAL_AF)],"\t")+"\n")
+                                        str(row.DNA_AF), str(row.RNA_AF),AA_Change
+                                        #, str(row.NORMAL_AF)
+                                        ],"\t")+"\n")
         else:
             gene =""
             AA_Change=""
@@ -467,8 +468,9 @@ def main():
             fout.write(string.join([args.ID, row.chr, str(row.start),
                                     str(row.end), row.reference, row.alt,
                                     gene,effect,
-                                    str(row.DNA_AF), str(row.RNA_AF),AA_Change,
-                                    str(row.NORMAL_AF)],"\t")+"\n")
+                                    str(row.DNA_AF), str(row.RNA_AF),AA_Change
+                                    #, str(row.NORMAL_AF)
+                                    ],"\t")+"\n")
     fout.close()
 
     if float(good)/float(total)>0.9:
