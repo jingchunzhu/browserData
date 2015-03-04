@@ -9,7 +9,7 @@ import gzip
 
 os.sys.path.insert(0, os.path.dirname(__file__) )
 
-def findSampleID (vcfFile): # this isRADIA specific
+def findRadiaRunSampleID (vcfFile): # this isRADIA specific
     if re.search("\.vcf.gz$", vcfFile):
         fin = gzip.open(vcfFile, 'rb')
     elif re.search("\.vcf$", vcfFile):
@@ -62,7 +62,7 @@ def passingSomatic (vcfFile, directory, cavmId, code):
     fout.close()
     return output
 
-    
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("inputVcfDir", type=str,
@@ -76,7 +76,7 @@ def main():
     args = parser.parse_args()
 
     fout = open(args.output,'w')
-    fout.write("#"+string.join(["sample","chr","start","end","reference","alt","gene","effect","DNA_VAF","RNA_VAF","Amino_Acid_Change"],"\t")+"\n")
+    fout.write("#"+string.join(["sample","chr","start","end","reference","alt","gene","effect","DNA_VAF","RNA_VAF","Amino_Acid_Change","NORMAL_VAF"],"\t")+"\n")
     fout.close()
 
     if args.id !="":
@@ -108,9 +108,9 @@ def main():
                 else:
                     if os.stat(args.inputVcfDir+"/"+vcfFile).st_size ==0:
                         continue
- 
+
                 vcfPathname = args.inputVcfDir + "/" + vcfFile
-                cavmId= findSampleID (args.inputVcfDir + "/" + vcfFile)
+                cavmId= findRadiaRunSampleID (args.inputVcfDir + "/" + vcfFile)
 
                 #passing somatic
                 if args.passingSomatic >0 :
@@ -122,14 +122,14 @@ def main():
                 elif re.search("\.vcf.gz$", vcfFile):
                     os.system("cp " +  args.inputVcfDir + "/" + vcfFile + " "+ tmpDir + "| gunzip "+ tmpDir+vcfFile )
                     fList.write(tmpDir+vcfFile[:-3]+"\n")
-            
+
         fList.close()
         cmd = "export PATH="+ os.path.dirname(__file__)+"/:$PATH; runSnpEffAgainstRefSeqFileList.bash .fileList"
         subprocess.call(cmd, shell=True)
 
         for vcfFile in os.listdir(tmpDir):
             if re.search("\.eff.vcf$", vcfFile) :
-                cavmId= findSampleID (tmpDir+vcfFile)
+                cavmId= findRadiaRunSampleID (tmpDir+vcfFile)
                 cmd= "cat "+ tmpDir+vcfFile +" | " +os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
                 subprocess.call(cmd, shell=True)
 
@@ -137,5 +137,5 @@ def main():
 
 if __name__ == '__main__':
         main()
-    
+
 
