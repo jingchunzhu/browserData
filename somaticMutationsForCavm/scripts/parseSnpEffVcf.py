@@ -39,6 +39,8 @@ class vcfRow(object):
         if (self.reference ==""):
             self.reference="-"
         self.alt = tokens[4]
+        if (self.alt =="")
+            self.alt ="-"
         self.end = self.start + len(self.reference) - 1
         self.DNA_AF=""
         self.RNA_AF=""
