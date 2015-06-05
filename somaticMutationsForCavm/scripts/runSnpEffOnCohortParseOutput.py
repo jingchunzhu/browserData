@@ -25,7 +25,7 @@ def findRadiaRunSampleID (vcfFile): # this isRADIA specific
             for pair in pairs:
                 key,value=string.split(pair,"=")[0:2]
                 #RADIA
-                if key=="ID" and value=="DNA_TUMOR":
+                if (key=="ID" and value=="DNA_TUMOR") or (key=="ID" and value=="PRIMARY"):
                     found =1
                     break
             if not found:
@@ -53,9 +53,14 @@ def passingSomatic (vcfFile, directory, cavmId, code):
             break
         if line[0]=="#":
             fout.write(line)
-        elif code==1 and string.find(line,"PASS")!=-1 and string.find (line,"SOM") !=-1 and string.find(line,"SS=2")!=-1  :# passing somatic
+        # passing somatic
+        elif code==1 and string.find(line,"PASS")!=-1 and string.find (line,"SOM") !=-1 and string.find(line,"SS=2")!=-1  :
             fout.write(line)
-        elif code==2 and string.find(line,"PASS")!=-1 and string.find (line,"SOM")!=-1 and  string.find(line,"SS=2")  and string.find (line,"VT=SNP")!=-1 :# passing somatic SNP
+        # passing somatic SNP
+        elif code==2 and string.find(line,"PASS")!=-1 and string.find (line,"SOM")!=-1 and  string.find(line,"SS=2")  and string.find (line,"VT=SNP")!=-1 :
+            fout.write(line)
+        #passing germline
+        elif code==3 and string.find(line,"PASS")!=-1 and string.find(line,"SS=1")!=-1  :
             fout.write(line)
         else:
             continue
@@ -76,7 +81,7 @@ def main():
     args = parser.parse_args()
 
     fout = open(args.output,'w')
-    fout.write("#"+string.join(["sample","chr","start","end","reference","alt","gene","effect","DNA_VAF","RNA_VAF","Amino_Acid_Change","NORMAL_VAF"],"\t")+"\n")
+    fout.write("#"+string.join(["sample","chr","start","end","reference","alt","gene","effect","DNA_VAF","RNA_VAF","Amino_Acid_Change"],"\t")+"\n")
     fout.close()
 
     if args.id !="":
@@ -132,7 +137,7 @@ def main():
                 cavmId= findRadiaRunSampleID (tmpDir+vcfFile)
                 cmd= "cat "+ tmpDir+vcfFile +" | " +os.path.dirname(__file__)+ "/parseSnpEffVcf.py "+cavmId + " " + args.output
                 subprocess.call(cmd, shell=True)
-
+        
         os.system("rm -rf "+tmpDir)
 
 if __name__ == '__main__':

@@ -39,7 +39,7 @@ class vcfRow(object):
         if (self.reference ==""):
             self.reference="-"
         self.alt = tokens[4]
-        if (self.alt =="")
+        if (self.alt ==""):
             self.alt ="-"
         self.end = self.start + len(self.reference) - 1
         self.DNA_AF=""
@@ -218,8 +218,10 @@ class vcfRow(object):
             return DNA_GT_code
         if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code == RNA_GT_code:
             return DNA_GT_code
-        if DNA_GT_code <= 0 and RNA_GT_code <= 0:
+        if DNA_GT_code < 0 and RNA_GT_code < 0:
             return None
+        if DNA_GT_code == 0 or RNA_GT_code == 0: #algorithms thinks the alt is just noise, but that the alt genotype
+            return 1 #essentially pick one of the alt
         if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom not in ["chrX","chrY"]):
             return None
         if DNA_GT_code > 0 and RNA_GT_code > 0 and DNA_GT_code != RNA_GT_code and (chrom in ["chrX","chrY"]):  # really stupid RADIA chrX and Y handling
@@ -435,13 +437,12 @@ def main():
     myVcf = vcf(sys.stdin)
 
     fout =open(args.ID,'w')
-    total=0
-    good=0
+
     for row in myVcf.read():
-        total =total+1
+        #total =total+1
         if row.alt =="NA":
             continue ######## bad calls in the VCF
-        good = good+1
+        #good = good+1
         if str(row.DNA_AF) not in ["NA",""]:
             row.DNA_AF= round_sigfigs(float(row.DNA_AF),3)
         else:
@@ -477,12 +478,8 @@ def main():
                                     ],"\t")+"\n")
     fout.close()
 
-    if float(good)/float(total)>0.9:
-        os.system("cat "+args.ID+" >> "+args.output)
-        os.system("rm -f "+args.ID)
-    else:
-        os.system("rm -f "+args.ID)
-        print "throw out due to "+ str(1- float(good)/float(total))+ " calls in vcf dose not make sense", args.ID
+    os.system("cat "+args.ID+" >> "+args.output)
+    os.system("rm -f "+args.ID)
 
 if __name__ == '__main__':
         main()
